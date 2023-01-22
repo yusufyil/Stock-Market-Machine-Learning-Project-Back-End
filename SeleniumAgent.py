@@ -20,7 +20,7 @@ def createDriver() -> webdriver.Chrome:
     chrome_options.add_argument("window-size=1400,2100")
     chrome_options.add_argument("disable-gpu")
     prefs = {"profile.managed_default_content_settings.images": 2}
-    chrome_options.headless = False
+    chrome_options.headless = True
     chrome_options.add_experimental_option("prefs", prefs)
     myDriver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
     return myDriver
