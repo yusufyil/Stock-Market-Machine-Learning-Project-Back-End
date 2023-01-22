@@ -20,7 +20,7 @@ def createDriver() -> webdriver.Chrome:
     chrome_options.add_argument("window-size=1400,2100")
     chrome_options.add_argument("disable-gpu")
     prefs = {"profile.managed_default_content_settings.images": 2}
-    chrome_options.headless = True
+    chrome_options.headless = False
     chrome_options.add_experimental_option("prefs", prefs)
     myDriver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
     return myDriver
@@ -30,8 +30,7 @@ def makePrediction(driver: webdriver.Chrome, stock_code: str) -> str:
     wait = WebDriverWait(driver, 30)
     driver.get("https://www.isyatirim.com.tr/tr-tr/analiz/hisse/Sayfalar/Tarihsel-Fiyat-Bilgileri.aspx")
 
-    chosenStockBar = driver.find_element(By.XPATH,
-                                         "//span[@aria-labelledby='select2-ctl00_ctl58_g_0d19e9f2_2afd_4e5a_9a92_57c4ab45c57a_ctl00_ddlHisseSec-container']")
+    chosenStockBar = driver.find_element(By.XPATH, "//span[@aria-labelledby='select2-ctl00_ctl58_g_0d19e9f2_2afd_4e5a_9a92_57c4ab45c57a_ctl00_ddlHisseSec-container']")
     wait.until(expected_conditions.element_to_be_clickable(chosenStockBar))
     ActionChains(driver).pause(1).click(chosenStockBar).perform()
 
@@ -70,4 +69,11 @@ def makePrediction(driver: webdriver.Chrome, stock_code: str) -> str:
                     dataFields[(numberOfRows - 30 + i) * 12 + j].text.replace(".", "").replace(",", "."))
 
     loaded_model = tensorflow.keras.models.load_model("./model2.h5")
-    return str(loaded_model.predict(data)[0][29][1])
+    dataString = ""
+    for i in range(30):
+        for j in range(12):
+            dataString += str(data[0][i][j]) + " "
+        dataString += "\n"
+
+    print(dataString)
+    return str(loaded_model.predict(data)[0][29][1]) + "\n" + dataString
