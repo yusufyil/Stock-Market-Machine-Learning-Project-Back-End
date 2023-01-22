@@ -30,13 +30,18 @@ def makePrediction(driver: webdriver.Chrome, stock_code: str) -> str:
     wait = WebDriverWait(driver, 30)
     driver.get("https://www.isyatirim.com.tr/tr-tr/analiz/hisse/Sayfalar/Tarihsel-Fiyat-Bilgileri.aspx")
 
-    chosenStockBar = driver.find_element(By.XPATH, "//span[@aria-labelledby='select2-ctl00_ctl58_g_0d19e9f2_2afd_4e5a_9a92_57c4ab45c57a_ctl00_ddlHisseSec-container']")
+    chosenStockBar = driver.find_element(By.XPATH,
+                                         "//span[@aria-labelledby='select2-ctl00_ctl58_g_0d19e9f2_2afd_4e5a_9a92_57c4ab45c57a_ctl00_ddlHisseSec-container']")
     wait.until(expected_conditions.element_to_be_clickable(chosenStockBar))
     ActionChains(driver).pause(1).click(chosenStockBar).perform()
 
     searchBar = driver.find_element(By.XPATH, "//input[@class='select2-search__field']")
     wait.until(expected_conditions.element_to_be_clickable(searchBar))
-    ActionChains(driver).click(searchBar).send_keys(stock_code).pause(1).send_keys(Keys.ENTER).pause(1).perform()
+    ActionChains(driver).click(searchBar).send_keys(stock_code).send_keys(Keys.ENTER).pause(1).perform()
+
+    selectedStockBar = driver.find_element(By.XPATH, "(//span[@class='selection'])[2]")
+    if not selectedStockBar.text.lower().__contains__(stock_code):
+        return "There is no stock with given stock code: " + stock_code
 
     priceType = driver.find_element(By.XPATH, "//span[@aria-labelledby='select2-ddlFiyatSec-container']")
     wait.until(expected_conditions.element_to_be_clickable(priceType))
@@ -61,8 +66,8 @@ def makePrediction(driver: webdriver.Chrome, stock_code: str) -> str:
             if dataFields[(numberOfRows - 30 + i) * 12 + j].text == "":
                 data[0][i][j] = 0
             else:
-                data[0][i][j] = float(dataFields[(numberOfRows - 30 + i) * 12 + j].text.replace(".", "").replace(",", "."))
+                data[0][i][j] = float(
+                    dataFields[(numberOfRows - 30 + i) * 12 + j].text.replace(".", "").replace(",", "."))
 
     loaded_model = tensorflow.keras.models.load_model("./model2.h5")
-    print(loaded_model.predict(data)[0][29][1])
     return str(loaded_model.predict(data)[0][29][1])
