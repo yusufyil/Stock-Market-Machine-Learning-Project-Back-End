@@ -26,7 +26,7 @@ def createDriver() -> webdriver.Chrome:
     return myDriver
 
 
-def makePrediction(driver: webdriver.Chrome, stock_code: str) -> str:
+def makePrediction(driver: webdriver.Chrome, stock_code: str):
     wait = WebDriverWait(driver, 30)
     driver.get("https://www.isyatirim.com.tr/tr-tr/analiz/hisse/Sayfalar/Tarihsel-Fiyat-Bilgileri.aspx")
 
@@ -60,8 +60,6 @@ def makePrediction(driver: webdriver.Chrome, stock_code: str) -> str:
     dataFields = driver.find_elements(By.XPATH, "//td[@class='text-right']")
     wait.until(expected_conditions.element_to_be_clickable(dataFields[-1]))
 
-    returnData = []
-
     for i in range(30):
         for j in range(12):
             if dataFields[(numberOfRows - 30 + i) * 12 + j].text == "":
@@ -71,9 +69,20 @@ def makePrediction(driver: webdriver.Chrome, stock_code: str) -> str:
                     dataFields[(numberOfRows - 30 + i) * 12 + j].text.replace(".", "").replace(",", "."))
 
     loaded_model = tensorflow.keras.models.load_model("./model2.h5")
-    returnData.append(loaded_model.predict(data)[0][29][1])
-    for i in range(30):
-        for j in range(12):
-            returnData.append(data[0][i][j])
 
-    return returnData.__str__()
+    returnData = {}
+    labels = ["Kapanis", "Min", "Max", "Aof", "Hacim", "Sermaye", "USDTRY", "Bist100", "Piyasa_degeri_mn_TL", "Piyasa_degeri_mn_USD", "Halka_acik_PD_mn_TL", "Halka_acik_PD_mn_USD"]
+    prediction = loaded_model.predict(data)[0][29][0]
+    prediction = float(prediction)
+
+    returnData["prediction"] = prediction
+    returnData.update({"stock_code": stock_code})
+    days = []
+    for i in range(30):
+        day = {}
+        for j in range(12):
+            day.update({labels[j]: data[0][i][j]})
+        days.append(day)
+    returnData.update({"days": days})
+
+    return returnData
