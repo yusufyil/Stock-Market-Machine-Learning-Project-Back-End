@@ -41,7 +41,7 @@ class stock(BaseModel):
     days: list[days]
 
 
-@app.get("/makePrediction{string}")
+@app.get("/makePrediction/{string}")
 def demo_get(string: str, api_key: APIKey = Depends(get_api_key)):
     driver = createDriver()
     result = makePrediction(driver, string)
