@@ -20,7 +20,7 @@ def createDriver() -> webdriver.Chrome:
     chrome_options.add_argument("window-size=1400,2100")
     chrome_options.add_argument("disable-gpu")
     prefs = {"profile.managed_default_content_settings.images": 2}
-    chrome_options.headless = False
+    chrome_options.headless = True
     chrome_options.add_experimental_option("prefs", prefs)
     myDriver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
     return myDriver
@@ -59,7 +59,9 @@ def makePrediction(driver: webdriver.Chrome, stock_code: str) -> str:
     time.sleep(2)
     dataFields = driver.find_elements(By.XPATH, "//td[@class='text-right']")
     wait.until(expected_conditions.element_to_be_clickable(dataFields[-1]))
-    print(len(dataFields) / 12)
+
+    returnData = []
+
     for i in range(30):
         for j in range(12):
             if dataFields[(numberOfRows - 30 + i) * 12 + j].text == "":
@@ -69,11 +71,9 @@ def makePrediction(driver: webdriver.Chrome, stock_code: str) -> str:
                     dataFields[(numberOfRows - 30 + i) * 12 + j].text.replace(".", "").replace(",", "."))
 
     loaded_model = tensorflow.keras.models.load_model("./model2.h5")
-    dataString = ""
+    returnData.append(loaded_model.predict(data)[0][29][1])
     for i in range(30):
         for j in range(12):
-            dataString += str(data[0][i][j]) + " "
-        dataString += "\n"
+            returnData.append(data[0][i][j])
 
-    print(dataString)
-    return str(loaded_model.predict(data)[0][29][1]) + "\n" + dataString
+    return returnData.__str__()
